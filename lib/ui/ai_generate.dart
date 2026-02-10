@@ -21,6 +21,7 @@ import '../src/constant.dart';
 import '../utility/apikey.dart'; // AIConfig (hardcoded key + model + headers)
 import '../utility/models.dart' as app;
 import '../utility/storage.dart';
+import '../utility/security.dart';
 
 /// =======================================================
 /// Flags & logging
@@ -342,8 +343,9 @@ class _AIGeneratePageState extends State<AIGeneratePage> {
 
   // ===================== AI GENERATOR (outline + images) =====================
   Future<void> _aiGenerateOutline() async {
+    // Check key presence securely
     if (AIConfig.openAIKey.isEmpty) {
-      _snack("OpenAI API key is empty in AIConfig.");
+      _snack("OpenAI Configuration Error: Key not found.");
       return;
     }
 
@@ -371,11 +373,17 @@ class _AIGeneratePageState extends State<AIGeneratePage> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    TextField(controller: topicCtrl,
-                        decoration: const InputDecoration(labelText: "Topic")),
+                    TextField(
+                      controller: topicCtrl,
+                      decoration: const InputDecoration(labelText: "Topic"),
+                      maxLength: 100, // Limit input length
+                    ),
                     const SizedBox(height: 8),
-                    TextField(controller: styleCtrl,
-                        decoration: const InputDecoration(labelText: "Style")),
+                    TextField(
+                      controller: styleCtrl,
+                      decoration: const InputDecoration(labelText: "Style"),
+                      maxLength: 50, // Limit input length
+                    ),
                     const SizedBox(height: 8),
                     Text("Slides: ${count.toInt()}"),
                     Slider(
@@ -400,12 +408,22 @@ class _AIGeneratePageState extends State<AIGeneratePage> {
 
     if (ok != true) return;
 
+    // SANITIZATION
+    // Allow alphanumeric, spaces, and basic punctuation. Remove questionable chars.
+    final safeTopic = topicCtrl.text.trim().replaceAll(RegExp(r'[^\w\s.,?!-]'), '');
+    final safeStyle = styleCtrl.text.trim().replaceAll(RegExp(r'[^\w\s]'), '');
+
+    if (safeTopic.isEmpty) {
+      _snack("Please enter a valid topic.");
+      return;
+    }
+
     setState(() => _busy = true);
     try {
       final outline = await _generateOutline(
-        topic: topicCtrl.text.trim(),
+        topic: safeTopic,
         slides: count.toInt(),
-        style: styleCtrl.text.trim(),
+        style: safeStyle.isEmpty ? 'professional' : safeStyle,
       );
 
       final slides = (outline['slides'] as List?);
@@ -458,8 +476,10 @@ class _AIGeneratePageState extends State<AIGeneratePage> {
       await _save();
       _snack("Outline generated & saved");
     } catch (e) {
-      _snack("AI failed: $e");
-      if (kNetworkLog) debugPrint('AI Outline Error → $e');
+      // Safe error message for user
+      _snack("AI generation failed. Please try again later.");
+      // Log sanitized error internally
+      if (kNetworkLog) debugPrint('AI Outline Error → ${e.toString()}');
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -471,14 +491,12 @@ class _AIGeneratePageState extends State<AIGeneratePage> {
       final info = await Purchases.getCustomerInfo();
       final active = info.entitlements.all[entitlementKey]?.isActive ?? false;
 
-      // cache ke SharedPreferences biar bisa fallback offline
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('is_premium', active);
+      // cache secure
+      await SecureStorage.setPremium(active);
       return active;
     } catch (_) {
       // fallback ke cache
-      final prefs = await SharedPreferences.getInstance();
-      return prefs.getBool('is_premium') ?? false;
+      return await SecureStorage.isPremium();
     }
   }
 
@@ -813,7 +831,7 @@ class _AIGeneratePageState extends State<AIGeneratePage> {
 
       // Metadata
       pres.title = p.title;
-      pres.author = 'Presentation AI';
+      pres.author = 'Tome AI';
       pres.company = 'Your Company';
       pres.showSlideNumbers = true;
       // If your dart_pptx version supports layout, uncomment:

@@ -1,21 +1,16 @@
-//TO DO: add the Apple API key for your app from the RevenueCat dashboard: https://app.revenuecat.com
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:purchases_ui_flutter/purchases_ui_flutter.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
+// Load keys from .env
+final googleApiKey = dotenv.get('REVENUECAT_GOOGLE_KEY', fallback: '');
+final amazonApiKey = dotenv.get('REVENUECAT_AMAZON_KEY', fallback: '');
+final appleApiKey = dotenv.get('REVENUECAT_APPLE_KEY', fallback: '');
 
-//TO DO: add the Google API key for your app from the RevenueCat dashboard: https://app.revenuecat.com
-const googleApiKey = 'googl_api_key';
-
-//TO DO: add the Amazon API key for your app from the RevenueCat dashboard: https://app.revenuecat.com
-const amazonApiKey = 'amazon_api_key';
-
-
-const appleApiKey = 'appl_GiIpkYqcClVzAbuOJuFpWIoUJpG';
 const entitlementKey = 'slides';
-const appId = 'app6dd1e43ac7';
+const appId = 'app6dd1e43ac7'; // This looks like a public app ID, leaving as is but could be moved to .env
 
 void checkPremiumStatus(CustomerInfo customerInfo) {
   // Mendefinisikan kunci entitlements premium yang Anda miliki

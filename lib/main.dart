@@ -1,16 +1,17 @@
 import 'dart:io';
 
-import 'package:aipresentation/src/constant.dart';
-import 'package:aipresentation/src/store_config.dart';
-import 'package:aipresentation/ui/ai_generate.dart';
-import 'package:aipresentation/ui/editor.dart';
-import 'package:aipresentation/ui/homepage.dart';
-import 'package:aipresentation/ui/setting.dart';
-import 'package:aipresentation/ui/template.dart';
+import 'package:tome_ai/src/constant.dart';
+import 'package:tome_ai/src/store_config.dart';
+import 'package:tome_ai/ui/ai_generate.dart';
+import 'package:tome_ai/ui/editor.dart';
+import 'package:tome_ai/ui/homepage.dart';
+import 'package:tome_ai/ui/setting.dart';
+import 'package:tome_ai/ui/template.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'opening/onboards.dart';
 import 'opening/splash.dart';
@@ -46,6 +47,7 @@ Future<void> main() async {
     );
   }
 
+  await dotenv.load(fileName: ".env");
   await _configureSDK();
   runApp(const AIPresentationApp());
 }
@@ -57,7 +59,7 @@ class AIPresentationApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'AI Presentation',
+      title: 'Tome AI',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,

@@ -49,10 +49,10 @@ class _OnboardingChatScreenState extends State<OnboardingChatScreen> {
   static const _ink    = Color(0xFF111827); // text
   static const _chip   = Color(0xFFF5F7FF); // bubble bg (bot)
 
-  // ============== Questions (AI Presentation) ==============
+  // ============== Questions (Tome AI) ==============
   final List<Map<String, dynamic>> _questions = [
     {
-      "q": "✨ Welcome to AI Presentation!\n\nWhat will you create today?",
+      "q": "✨ Welcome to Tome AI!\n\nWhat will you create today?",
       "choices": [
         "Pitch deck",
         "Company profile",
@@ -359,7 +359,7 @@ class _OnboardingChatScreenState extends State<OnboardingChatScreen> {
       backgroundColor: _bgBot,
       navigationBar: CupertinoNavigationBar(
         middle: Text(
-          "AI Presentation",
+          "Tome AI",
           style: GoogleFonts.poppins(
             color: _indigo,
             fontWeight: FontWeight.w800,

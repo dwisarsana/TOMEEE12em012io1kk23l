@@ -6,6 +6,7 @@ import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../src/constant.dart';
+import '../utility/security.dart';
 
 class MorePage extends StatefulWidget {
   const MorePage({super.key});
@@ -19,7 +20,7 @@ class _MorePageState extends State<MorePage> {
   String? userEmail;
   bool isPremium = false;
 
-  // Brand palette — AI Presentation
+  // Brand palette — Tome AI
   static const _primary = Color(0xFF5865F2); // indigo
   static const _chip    = Color(0xFFEEF2FF);
   static const _ink     = Color(0xFF1F2937);
@@ -32,11 +33,14 @@ class _MorePageState extends State<MorePage> {
   }
 
   Future<void> _loadLoginStatus() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      isLoggedIn = prefs.getBool('is_logged_in') ?? false;
-      userEmail  = prefs.getString('user_email');
-    });
+    final loggedIn = await SecureStorage.isLoggedIn();
+    final email = await SecureStorage.getUserEmail();
+    if (mounted) {
+      setState(() {
+        isLoggedIn = loggedIn;
+        userEmail  = email;
+      });
+    }
   }
 
   Future<void> _refreshPremiumStatus() async {
@@ -58,10 +62,9 @@ class _MorePageState extends State<MorePage> {
         final credential = await SignInWithApple.getAppleIDCredential(
           scopes: [AppleIDAuthorizationScopes.email],
         );
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setBool('is_logged_in', true);
+        await SecureStorage.setLoggedIn(true);
         if (credential.email != null) {
-          await prefs.setString('user_email', credential.email!);
+          await SecureStorage.setUserEmail(credential.email!);
         }
         setState(() {
           isLoggedIn = true;
@@ -89,9 +92,7 @@ class _MorePageState extends State<MorePage> {
   }
 
   Future<void> _logout() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('is_logged_in');
-    await prefs.remove('user_email');
+    await SecureStorage.clearAuth();
     setState(() {
       isLoggedIn = false;
       userEmail  = null;
@@ -114,8 +115,9 @@ class _MorePageState extends State<MorePage> {
       ),
     );
     if (ok == true) {
+      await SecureStorage.clearAuth();
       final prefs = await SharedPreferences.getInstance();
-      await prefs.clear();
+      await prefs.clear(); // Clear other non-secure prefs
       setState(() {
         isLoggedIn = false;
         userEmail  = null;
@@ -136,7 +138,7 @@ class _MorePageState extends State<MorePage> {
         await _refreshPremiumStatus();
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Thanks for upgrading to AI Presentation Premium!")),
+            const SnackBar(content: Text("Thanks for upgrading to Tome AI Premium!")),
           );
         }
       } else {
@@ -285,7 +287,7 @@ class _MorePageState extends State<MorePage> {
             icon: Icons.workspace_premium_rounded,
             text: isPremium ? "You’re Premium" : "Upgrade to Premium",
             subtitle: isPremium
-                ? "Thanks for supporting AI Presentation!"
+                ? "Thanks for supporting Tome AI!"
                 : "Unlock PPTX export themes, HD image generation with AI.",
             color: _primary,
             trailing: isPremium

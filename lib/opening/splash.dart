@@ -78,7 +78,7 @@ class _SplashScreenState extends State<SplashScreen>
                 ),
                 const SizedBox(height: 26),
 
-                // Title — AI Presentation
+                // Title — Tome AI
                 TweenAnimationBuilder<double>(
                   tween: Tween(begin: 0.0, end: 1.0),
                   duration: const Duration(milliseconds: 700),
@@ -86,7 +86,7 @@ class _SplashScreenState extends State<SplashScreen>
                   builder: (context, value, child) =>
                       Opacity(opacity: value, child: child),
                   child: Text(
-                    "AI Presentation",
+                    "Tome AI",
                     textAlign: TextAlign.center,
                     style: GoogleFonts.poppins(
                       color: _brandIndigo,

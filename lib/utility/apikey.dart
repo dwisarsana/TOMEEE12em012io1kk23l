@@ -1,11 +1,9 @@
 // lib/utility/apikey.dart
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 class AIConfig {
-  /// API key diambil dari --dart-define saat build/run.
-  /// Contoh: flutter run --dart-define=OPENAI_API_KEY=sk-proj-xxx
-  static const openAIKey = String.fromEnvironment(
-    'OPENAI_API_KEY',
-    defaultValue: '',
-  );
+  /// Load from .env or environment variable
+  static String get openAIKey => dotenv.get('OPENAI_API_KEY', fallback: '');
 
   /// Model default
   static const openAIModel = 'gpt-4o-mini';
@@ -20,8 +18,7 @@ class AIConfig {
   static void assertHasKey() {
     if (openAIKey.isEmpty) {
       throw StateError(
-        'OPENAI_API_KEY belum di-set.\n'
-        'Jalankan: flutter run --dart-define=OPENAI_API_KEY=sk-proj-xxx',
+        'OPENAI_API_KEY is not set in .env file or environment variables.',
       );
     }
   }
