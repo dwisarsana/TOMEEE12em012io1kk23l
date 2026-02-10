@@ -7,6 +7,7 @@ import 'package:tome_ai/ui/editor.dart';
 import 'package:tome_ai/ui/homepage.dart';
 import 'package:tome_ai/ui/setting.dart';
 import 'package:tome_ai/ui/template.dart';
+import 'package:tome_ai/ui/shell/app_shell.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
@@ -120,7 +121,7 @@ class _LaunchGateState extends State<_LaunchGate> {
         return OnboardingChatScreen(onFinish: _onOnboardFinish);
 
       case _Phase.home:
-        return const HomePage();
+        return const AppShell();
     }
   }
 }
