@@ -47,14 +47,18 @@ Future<void> main() async {
     );
   }
 
-  await dotenv.load(fileName: ".env");
+  try {
+    await dotenv.load(fileName: ".env");
+  } catch (e) {
+    debugPrint("Warning: .env file not found. Using empty environment.");
+  }
   await _configureSDK();
-  runApp(const AIPresentationApp());
+  runApp(const TomeAIApp());
 }
 
 
-class AIPresentationApp extends StatelessWidget {
-  const AIPresentationApp({super.key});
+class TomeAIApp extends StatelessWidget {
+  const TomeAIApp({super.key});
 
   @override
   Widget build(BuildContext context) {
