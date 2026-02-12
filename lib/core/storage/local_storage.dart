@@ -1,6 +1,6 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
-import 'models.dart';
+import '../models/presentation_models.dart';
 
 const String kRecentsKey = 'recent_presentations';
 String _presentationKey(String id) => 'presentation_$id';
