@@ -6,13 +6,14 @@ class PaywallScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // In a real implementation, we might call RevenueCatUI.presentPaywall()
-    // or embed PaywallView() if available in the SDK version.
-    // For now, using a placeholder scaffold.
+    // Wrap RevenueCatUI in a Scaffold to avoid navigation issues if pushed as a route.
+    // However, RevenueCatUI.presentPaywall() is usually a modal.
+    // If this screen is navigated to via GoRouter, we should use PaywallView if available,
+    // or call the modal and pop when done.
+    // For simplicity and robustness given the contract, we'll embed the view.
     return Scaffold(
-      appBar: AppBar(title: const Text('Premium Access')),
-      body: const Center(
-        child: Text('Paywall Placeholder - Use RevenueCatUI'),
+      body: PaywallView(
+        onDismiss: () => Navigator.pop(context),
       ),
     );
   }
