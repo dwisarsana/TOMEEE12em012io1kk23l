@@ -1,120 +1,58 @@
 import 'dart:io';
 
-import 'package:aipresentation/src/constant.dart';
-import 'package:aipresentation/src/store_config.dart';
-import 'package:aipresentation/ui/ai_generate.dart';
-import 'package:aipresentation/ui/editor.dart';
-import 'package:aipresentation/ui/homepage.dart';
-import 'package:aipresentation/ui/setting.dart';
-import 'package:aipresentation/ui/template.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
-import 'opening/onboards.dart';
-import 'opening/splash.dart';
-
-
-Future<void> _configureSDK() async {
-  await Purchases.setLogLevel(LogLevel.debug);
-
-  PurchasesConfiguration configuration;
-  if (StoreConfig.isForAmazonAppstore()) {
-    configuration = AmazonConfiguration(StoreConfig.instance.apiKey);
-  } else {
-    configuration = PurchasesConfiguration(StoreConfig.instance.apiKey);
-  }
-  configuration.entitlementVerificationMode =
-      EntitlementVerificationMode.informational;
-
-  await Purchases.configure(configuration);
-  await Purchases.enableAdServicesAttributionTokenCollection();
-}
+import 'app/navigation/app_router.dart';
+import 'core/monetization/revenue_cat_service.dart';
+import 'core/monetization/store_config.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // RevenueCat Store Config
-  if (Platform.isIOS || Platform.isMacOS) {
-    StoreConfig(store: Store.appStore, apiKey: appleApiKey);
-  } else if (Platform.isAndroid) {
-    const useAmazon = bool.fromEnvironment("amazon");
-    StoreConfig(
-      store: useAmazon ? Store.amazon : Store.playStore,
-      apiKey: useAmazon ? amazonApiKey : googleApiKey,
-    );
+  // RevenueCat Store Config Logic
+  try {
+    if (Platform.isIOS || Platform.isMacOS) {
+      StoreConfig(store: Store.appStore, apiKey: appleApiKey);
+    } else if (Platform.isAndroid) {
+      const useAmazon = bool.fromEnvironment("amazon");
+      StoreConfig(
+        store: useAmazon ? Store.amazon : Store.playStore,
+        apiKey: useAmazon ? amazonApiKey : googleApiKey,
+      );
+    }
+
+    // Initialize RevenueCat via Service
+    // Note: StoreConfig factory ensures _instance is set if platform logic matched
+    await RevenueCatService.configure(StoreConfig.instance);
+  } catch (e) {
+    debugPrint("Failed to initialize RevenueCat: $e");
   }
 
-  await _configureSDK();
-  runApp(const AIPresentationApp());
+  runApp(const ProviderScope(child: TomeApp()));
 }
 
-
-class AIPresentationApp extends StatelessWidget {
-  const AIPresentationApp({super.key});
+class TomeApp extends ConsumerWidget {
+  const TomeApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'AI Presentation',
+  Widget build(BuildContext context, WidgetRef ref) {
+    final router = ref.watch(goRouterProvider);
+
+    return MaterialApp.router(
+      title: 'Tome AI',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF5865F2)),
-        textTheme: GoogleFonts.poppinsTextTheme(),
-        scaffoldBackgroundColor: const Color(0xFFF6F7FB),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF4F46E5), // Mystic Indigo from Design System
+        ),
+        textTheme: GoogleFonts.plusJakartaSansTextTheme(), // Using Sans as per Design System
+        scaffoldBackgroundColor: const Color(0xFFF8FAFC), // Wash White
       ),
-      home: const _LaunchGate(),
-      routes: {
-        '/editor':     (_) => const EditorPage(),
-        '/templates':  (_) => const TemplatesPage(),
-        '/settings':   (_) => const MorePage(),
-        '/ai':         (_) => const AIGeneratePage(),
-      },
+      routerConfig: router,
     );
-  }
-}
-
-enum _Phase { splash, onboard, home }
-
-class _LaunchGate extends StatefulWidget {
-  const _LaunchGate({super.key});
-
-  @override
-  State<_LaunchGate> createState() => _LaunchGateState();
-}
-
-class _LaunchGateState extends State<_LaunchGate> {
-  _Phase _phase = _Phase.splash;
-
-  Future<void> _decideNext() async {
-    // baca flag setiap selesai splash (menghindari race)
-    final prefs = await SharedPreferences.getInstance();
-    final done = prefs.getBool('onboarding_done') ?? false;
-    if (!mounted) return;
-    setState(() => _phase = done ? _Phase.home : _Phase.onboard);
-  }
-
-  Future<void> _onOnboardFinish() async {
-    // Onboarding screen sendiri juga sudah set flag,
-    // di sini cukup arahkan ke Home.
-    setState(() => _phase = _Phase.home);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    switch (_phase) {
-      case _Phase.splash:
-      // Setelah animasi splash selesai, tentukan next step
-        return SplashScreen(onFinish: _decideNext);
-
-      case _Phase.onboard:
-      // Setelah onboarding selesai, masuk Home
-        return OnboardingChatScreen(onFinish: _onOnboardFinish);
-
-      case _Phase.home:
-        return const HomePage();
-    }
   }
 }
